@@ -1,0 +1,150 @@
+<html>
+<body>
+<h2>Running the Amazon S3 Personal File Store Sample</h2>
+<p>This <i>Amazon S3 Personal File Store</i> sample is fully detailed in the <a href="MobileCredentialManagement.html">Mobile Credential Management</a> article.  The sample demonstrates how to customize the token vending machine to give application users specific and constrained permissions to an Amazon S3 bucket.  Each application user will get a "folder" of an Amazon S3 bucket as specified by the modified policy.  This README details all the steps necessary to get the sample fully running:</p>
+<ol>
+    <li><b>Create an Amazon S3 bucket to use for the sample.</b>
+        <ul>
+            <li>Using the <a href="http://aws.amazon.com/console/">AWS Management Console</a> create a <b>new</b> Amazon S3 bucket for testing with this sample.  The name you choose for the bucket will be necessary for a number of steps to follow.</li>
+        </ul>
+    </li>
+    <li><b>Customize and build the token vending machine specific for this sample.</b>
+        <br/>Note: To build the token vending machine, you will need access to <a href="http://ant.apache.org">Ant</a> and <a href="http://java.sun.com">Java</a> on your machine.  The following steps need to be excuted from the command line:
+        <ul>
+            <li>From a termincal application, change into the <i>CustomTVM</i> directory.</li>
+            <li>Modify the <i>TokenVendingMachinePolicy.json</i> file in the <i>src</i> directory.
+                <ul>
+                    <li>Replace the two instances of <b>__BUCKET_NAME__</b> with the Amazon S3 bucket you <b>already</b> created to use for this application.</li>
+                    <li>The default policy and sample substitution can be seen <a href="#TokenVendingMachinePolicy">below</a>.</li>
+                </ul>
+            </li>
+            <li>Build the token vending machine using <b>ant</b>.
+                <ul>
+                    <li>From the command line, just enter <i>ant</i>.  The CustomTVM is configured to automatically build everything that is necessary.</li>
+                    <li>Running <i>ant</i> will produce a <i>CustomTVM.war</i> file.  This will be used later in an upload to AWS Elastic Beanstalk.</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li><b>Deploy the token vending machine to AWS Elastic Beanstalk.</b>
+        <ul><li>Follow these <a href="http://aws.amazon.com/code/7351543942956566">instructions</a> for deploying the token vending machine to AWS Elastic Beanstalk</a>.  However, the following modifications to the instructions must be made:
+                <ul>
+                    <li>When adding the policy to the TVMUser, don't use the default policy shown in the instructions.  Instead the IAM User policy must be modified to restrict access to the appropriate Amazon S3 bucket necessary for this application.  The policy to use with a sample bucket name subtitution can be seen <a href="#IAMUserPolicy">below</a>.</li>
+                    <li>When the instructions ask you to select the IdentityTVM.war file, use the <i>CustomTVM.war</i> that was created when you built the CustomTVM above.</li>
+                </ul>
+            </li>
+        </ul>
+    </li>       
+    <li><b>Run the sample iOS or Android application.</b>
+        <ul><li>Following the instructions in the READMEs located in the <a href="S3PersonalFileStore-iOS/README.html">S3PersonalFileStore-iOS</a> or <a href="S3PersonalFileStore-Android/README.txt">S3PersonalFileStore-Android</a> directories will allow you to run the mobile application in conjunction with the token vending machine.
+            </li></ul>
+    </li>      
+</ol>
+
+<hr>
+<a name="TokenVendingMachinePolicy"/>
+<h3>TokenVendingMachinePolicy.json</h3>
+You will need to update the default policy.  Replace the occurrences of <b>__BUCKET_NAME__</b> to an Amazon S3 bucket you created for this application.  Do <b>not</b> modify the <b>__USERNAME__</b> strings as those will be automatically updated by the token vending machine.
+
+<p style="font-family:courier;font-size:14">
+{"Statement":<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"Effect":"Allow","Action":["s3:PutObject","s3:GetObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::<b>__BUCKET_NAME__</b>/__USERNAME__/*"},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"Effect":"Allow","Action":"s3:ListBucket","Resource":"arn:aws:s3:::<b>__BUCKET_NAME__</b>","Condition":{"StringLike":{"s3:prefix":"__USERNAME__/"}}},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"Effect":"Deny","Action":["iam:*", "sts:*", "sdb:*"],"Resource":"*"}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+}<br/>
+</p>
+
+If you used <b>my_s3_bucket</b> as the bucket name for the substitution, your policy would result in the following:
+
+<p style="font-family:courier;font-size:14">
+{"Statement":<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"Effect":"Allow","Action":["s3:PutObject","s3:GetObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::<b>my_s3_bucket</b>/__USERNAME__/*"},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"Effect":"Allow","Action":"s3:ListBucket","Resource":"arn:aws:s3:::<b>my_s3_bucket</b>","Condition":{"StringLike":{"s3:prefix":"__USERNAME__/"}}},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"Effect":"Deny","Action":["iam:*", "sts:*", "sdb:*"],"Resource":"*"}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+}<br/>
+</p>
+
+
+<hr>
+<a name="IAMUserPolicy"/>
+<h3>IAM User Policy</h3>
+The default IAM User Policy also needs to have the <b>__BUCKET_NAME__</b> replaced.  The bucket name here should match the bucket name used in the TokenVendingMachinePolicy.json object. 
+<p style="font-family:courier;font-size:14">
+{<br/>
+&nbsp;&nbsp;"Statement": [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": "sts:GetFederationToken",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "*"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": "iam:GetUser",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "*"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": ["s3:PutObject","s3:GetObject","s3:DeleteObject"],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "arn:aws:s3:::<b>__BUCKET_NAME__</b>/*"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": ["s3:ListBucket"],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "arn:aws:s3:::<b>__BUCKET_NAME__</b>"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": "sdb:*",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "*"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;]<br/>
+}<br/>
+</p>
+
+If you used <b>my_s3_bucket</b> as the bucket name for the substitution, your would policy result in the following:
+
+<p style="font-family:courier;font-size:14">
+{<br/>
+&nbsp;&nbsp;"Statement": [<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": "sts:GetFederationToken",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "*"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": "iam:GetUser",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "*"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": ["s3:PutObject","s3:GetObject","s3:DeleteObject"],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "arn:aws:s3:::<b>my_s3_bucket</b>/*"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": ["s3:ListBucket"],<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "arn:aws:s3:::<b>my_s3_bucket</b>"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Effect": "Allow",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Action": "sdb:*",<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Resource": "*"<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;]<br/>
+}<br/>
+</p>
+
+</body>
+</html>
+
+
+
+
+
+
+
