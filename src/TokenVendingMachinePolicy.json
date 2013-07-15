@@ -1,7 +1,7 @@
 {"Statement":
     [
-        {"Effect":"Allow","Action":["s3:*", "sdb:*", "sqs:*", "sns:*", "dynamodb:*"],"Resource":"*"},
-        {"Effect":"Deny","Action":"sdb:*","Resource":["arn:aws:sdb:__REGION__:__ACCOUNT_ID__:domain/__USERS_DOMAIN__","arn:aws:sdb:__REGION__:__ACCOUNT_ID__:domain/__DEVICE_DOMAIN__"]},
-        {"Effect":"Deny","Action":"iam:*","Resource":"*"}
+        {"Effect":"Allow","Action":["s3:PutObject","s3:GetObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::__BUCKET_NAME__/__USERNAME__/*"},
+        {"Effect":"Allow","Action":"s3:ListBucket","Resource":"arn:aws:s3:::__BUCKET_NAME__","Condition":{"StringLike":{"s3:prefix":"__USERNAME__/"}}},
+        {"Effect":"Deny","Action":["iam:*", "sts:*", "sdb:*"],"Resource":"*"}
     ]
 }
