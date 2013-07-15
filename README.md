@@ -3,6 +3,8 @@ Custom TVM
 This is a sample reference application for running a service that distributes temporary credentials to client applications.
 Currently, this sample code can be used in conjunctions with the Mobile SDKs for iOS and Android.  For more information
 please visit:
+
+  * http://aws.amazon.com/code/4598681430241367
   * http://aws.amazon.com/articles/4611615499399490
   * http://aws.amazon.com/sdkforios/
   * http://aws.amazon.com/sdkforandroid/
